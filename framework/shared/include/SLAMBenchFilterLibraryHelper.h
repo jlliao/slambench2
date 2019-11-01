@@ -37,6 +37,8 @@ public:
 	bool                              (* c_sb_new_filter_configuration) (SLAMBenchFilterLibraryHelper * ) ;
 	bool                              (* c_sb_init_filter)    (SLAMBenchFilterLibraryHelper * ) ;
 	slambench::io::SLAMFrame *        (* c_sb_process_filter) (SLAMBenchFilterLibraryHelper *, slambench::io::SLAMFrame * ) ;
+	bool 							  (* c_sb_update_frame_filter) (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper *, slambench::io::SLAMFrame * ) ;
+	bool 							  (* c_sb_process_once_filter) (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * ) ;
 
 private:
     SLAMBenchFilterLibraryHelper ();
@@ -52,7 +54,9 @@ public:
 		_input_interface (i),
 		c_sb_new_filter_configuration(nullptr),
 		c_sb_init_filter(nullptr),
-		c_sb_process_filter(nullptr)
+		c_sb_process_filter(nullptr),
+		c_sb_update_frame_filter(nullptr),
+		c_sb_process_once_filter(nullptr)
 	{
 
 	}

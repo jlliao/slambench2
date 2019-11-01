@@ -38,6 +38,8 @@
 		 LOAD_FUNC2HELPER(handle,lib_ptr,c_sb_new_filter_configuration);
 		 LOAD_FUNC2HELPER(handle,lib_ptr,c_sb_init_filter);
 		 LOAD_FUNC2HELPER(handle,lib_ptr,c_sb_process_filter);
+		 LOAD_FUNC2HELPER(handle,lib_ptr,c_sb_update_frame_filter);
+		 LOAD_FUNC2HELPER(handle,lib_ptr,c_sb_process_once_filter);
 
 		 size_t pre = slambench::memory::MemoryProfile::singleton.GetOverallData().BytesAllocatedAtEndOfFrame;
 		 if (!lib_ptr->c_sb_new_filter_configuration(lib_ptr)) {
