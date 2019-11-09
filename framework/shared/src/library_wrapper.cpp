@@ -43,15 +43,15 @@ extern "C" {
 	bool c_sb_init_filter(void * slam_settings)  {
 		return sb_init_filter((SLAMBenchFilterLibraryHelper *) slam_settings);
 	}
-	void * c_sb_process_filter(void *lib, void *timestamp) {
-		return sb_process_filter((SLAMBenchFilterLibraryHelper*)lib, (slambench::io::SLAMFrame *)timestamp);
+	void * c_sb_process_filter(void *lib, void *frame) {
+		return sb_process_filter((SLAMBenchFilterLibraryHelper*)lib, (slambench::io::SLAMFrame *)frame);
 	}
 
-	bool c_sb_update_frame_filter(void *slam_settings, void *lib, void *timestamp) {
-		return sb_update_frame_filter((SLAMBenchFilterLibraryHelper *) slam_settings, (SLAMBenchLibraryHelper *) lib, (slambench::io::SLAMFrame *)timestamp);
+	bool c_sb_update_frame_filter(void *slam_settings, void *lib, void *frame) {
+		return sb_update_frame_filter((SLAMBenchFilterLibraryHelper *) slam_settings, (SLAMBenchLibraryHelper *) lib, (slambench::io::SLAMFrame *)frame);
 	}
 
-	bool c_sb_process_once_filter(void *slam_settings, void *lib, void *timestamp) {
+	bool c_sb_process_once_filter(void *slam_settings, void *lib) {
 		return sb_process_once_filter((SLAMBenchFilterLibraryHelper *) slam_settings, (SLAMBenchLibraryHelper *) lib);
 	}
 

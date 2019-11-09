@@ -21,8 +21,8 @@
 #include <SLAMBenchUI.h>
 #include <vector>
 #include <Eigen/Core>
-#include <SLAMBenchLibraryHelper.h>
 
+class SLAMBenchLibraryHelper;
 
 
 class SLAMBenchFilterLibraryHelper : public ParameterComponent {
