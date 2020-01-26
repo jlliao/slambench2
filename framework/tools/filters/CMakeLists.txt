@@ -12,6 +12,10 @@ add_library(identity-flow-filter SHARED identity_flow.cpp )
 target_link_libraries(identity-flow-filter PRIVATE ${SLAMBENCH_C_WRAPPER} )
 target_include_directories(identity-flow-filter PRIVATE ${SLAMBENCH_INCLUDE_DIR})
 
+add_library(skip-flow-filter SHARED skip_flow.cpp )
+target_link_libraries(skip-flow-filter PRIVATE ${SLAMBENCH_C_WRAPPER} )
+target_include_directories(skip-flow-filter PRIVATE ${SLAMBENCH_INCLUDE_DIR})
+
 add_library(skip-filter    SHARED  skip_frame.cpp )
 target_link_libraries(skip-filter PRIVATE ${SLAMBENCH_C_WRAPPER} )
 target_include_directories(skip-filter PRIVATE ${SLAMBENCH_INCLUDE_DIR}) 

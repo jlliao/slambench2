@@ -1,8 +1,8 @@
 /*
- * identity.cpp
+ * identity_flow.cpp
  *
- *  Created on: Nov 22, 2018
- *      Author: toky
+ *  Created on: Nov 22, 2019
+ *      Author: jianglong
  */
 
 #include <SLAMBenchAPI.h>
@@ -26,6 +26,7 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 	delete filtered_frame;
 	return ongoing;
 }
+
 bool sb_process_once_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib) {
 	return lib->c_sb_process_once(lib); 
 }
