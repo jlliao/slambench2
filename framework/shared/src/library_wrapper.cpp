@@ -11,6 +11,7 @@
 #include <SLAMBenchAPI.h>
 #include <TimeStamp.h>
 #include <Eigen/Core>
+#include <tuple>
 
 extern "C" {
 
@@ -47,7 +48,7 @@ extern "C" {
 		return sb_process_filter((SLAMBenchFilterLibraryHelper*)lib, (slambench::io::SLAMFrame *)frame);
 	}
 
-	bool c_sb_update_frame_filter(void *slam_settings, void *lib, void *frame) {
+	std::tuple<bool, bool> c_sb_update_frame_filter(void *slam_settings, void *lib, void *frame) {
 		return sb_update_frame_filter((SLAMBenchFilterLibraryHelper *) slam_settings, (SLAMBenchLibraryHelper *) lib, (slambench::io::SLAMFrame *)frame);
 	}
 
