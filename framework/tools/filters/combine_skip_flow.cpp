@@ -432,7 +432,8 @@ std::tuple<bool, bool> sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , 
 		calc_intensity_histogram(frame, hist_new_intensity, contrib_intensity);
 		intensity_divergence = calc_kl_divergence(hist_new_intensity, hist_old_intensity);
 		std::cout << "intensity_divergence = " << intensity_divergence << std::endl;
-		buffered_frames.push_back(frame);
+		slambench::io::SLAMFrame* grey_frame = new IdentityFrame(frame);
+		buffered_frames.push_back(grey_frame);
 		hist_old_intensity = hist_new_intensity;
 		has_int = true;
 	}
@@ -459,15 +460,18 @@ std::tuple<bool, bool> sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , 
 		calc_depth_histogram(remove_zeroes(norms, mask_new), hist_new_depth, contrib_depth);
 		depth_divergence = calc_kl_divergence(hist_new_depth, hist_old_depth);
 		std::cout << "depth_divergence = " << depth_divergence << std::endl;
-		buffered_frames.push_back(frame);
+		slambench::io::SLAMFrame* depth_frame = new IdentityFrame(frame);
+		buffered_frames.push_back(depth_frame);
 		hist_old_depth = hist_new_depth;
 		has_depth = true;
 	}
 
 	if (frame->FrameSensor == (slambench::io::Sensor *)rgb_sensor){
 		std::cout << "rgb frame " << std::endl;
-		buffered_frames.push_back(frame);
+		slambench::io::SLAMFrame* rgb_frame = new IdentityFrame(frame);
+		buffered_frames.push_back(rgb_frame);
 		has_rgb = true;
+		
 	}
 
 	// check whether the filter has enough frames
