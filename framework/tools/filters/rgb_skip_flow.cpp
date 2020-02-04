@@ -87,6 +87,8 @@ std::tuple<bool, bool> sb_update_frame_filter(SLAMBenchFilterLibraryHelper *, SL
     {   
         new_frame = new IdentityFrame(frame);
         ongoing = not lib->c_sb_update_frame(lib, new_frame);
+        new_frame->FreeData();
+        delete new_frame;
         return std::make_tuple(ongoing, true);
     }
     float contrib = 1 / (float)(frame->GetSize()); // set contribution according to first frame resolution
