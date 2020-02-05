@@ -21,6 +21,7 @@ struct ScalarComparer {
     }
 };
 
+// ********* [[ GLOBAL VARIABLES ]] *********
 double threshold = 0;
 double default_threshold = 0.0001;
 static slambench::io::DepthSensor *depth_sensor;
@@ -39,8 +40,9 @@ float d = (1 - a) / 2;
 float e = sqrt(d);
 float f = sqrt(c);
 
-std::deque<slambench::io::SLAMFrame*> buffered_frames;
-bool has_rgb, has_int, has_depth = false;
+std::deque<slambench::io::SLAMFrame*> buffered_rgb;
+std::deque<slambench::io::SLAMFrame*> buffered_int;
+std::deque<slambench::io::SLAMFrame*> buffered_depth;
 
 std::vector<sb_float3> verts = {
                                 {make_sb_float3( 0,  0,  1),
@@ -79,6 +81,8 @@ std::vector<std::array<sb_float3, 3>> tris = {
                                                 {verts[11], verts[ 9], verts[ 8]},
                                                 {verts[11], verts[10], verts[ 9]}}
 };
+
+// ********* [[ AUXILLARY FUNCTIONS ]] *********
 
 sb_float3 add_sb_float3(sb_float3 arg1, sb_float3 arg2)
 {
@@ -319,17 +323,6 @@ float calc_kl_divergence(const std::vector<float> &hist_new,
 	return kl_divergence;
 }
 
-bool sb_new_filter_configuration(SLAMBenchFilterLibraryHelper *filter_settings)
-{
-	// initialise filter with threshold parameter
-	filter_settings->addParameter(TypedParameter<double>("fth",
-														 "skip-threshold",
-														 "Numerical value to specify KL divergence threshold",
-														 &threshold,
-														 &default_threshold));
-	return true;
-}
-
 void init_normal_bins(std::vector<std::array<sb_float3, 3>> tris,
 					  std::vector<sb_float3> &normal_bins, // normal bins will be initialised here
 					  int order)
@@ -378,6 +371,28 @@ void init_normal_bins(std::vector<std::array<sb_float3, 3>> tris,
 	normal_bins = std::vector<sb_float3>(normals_set.begin(), normals_set.end());
 }
 
+void free_data_queue(std::deque<slambench::io::SLAMFrame*> frame_queue) {
+	for (auto temp_frame : frame_queue) {
+		if (temp_frame) {
+			temp_frame->FreeData();
+			delete temp_frame;
+		}
+	}
+}
+
+// ********* [[ FILTER FUNCTIONS ]] *********
+
+bool sb_new_filter_configuration(SLAMBenchFilterLibraryHelper *filter_settings)
+{
+	// initialise filter with threshold parameter
+	filter_settings->addParameter(TypedParameter<double>("fth",
+														 "skip-threshold",
+														 "Numerical value to specify KL divergence threshold",
+														 &threshold,
+														 &default_threshold));
+	return true;
+}
+
 bool sb_init_filter (SLAMBenchFilterLibraryHelper * filter_settings) {
 	// Initialise sensors
 	slambench::io::CameraSensorFinder sensor_finder;
@@ -396,13 +411,11 @@ bool sb_init_filter (SLAMBenchFilterLibraryHelper * filter_settings) {
 }
 bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib, slambench::io::SLAMFrame * frame) {
 	bool enough = false;
-
-	float intensity_divergence = 0;
-  	float depth_divergence = 0;
-	float combined_divergence = 0;
 	std::vector<float> hist_new_intensity, hist_new_depth;
 
+	// buffering grey frames
 	if (frame->FrameSensor == (slambench::io::Sensor *)grey_sensor){
+		std::cout << "grey frame " << std::endl;
 		// initialise histogram from first frame
 		float contrib_intensity = 1 / (float)(frame->GetSize()); // set contribution according to first frame resolution
 		if (!hist_old_intensity.size()){
@@ -410,19 +423,13 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 			calc_intensity_histogram(frame, hist_old_intensity, contrib_intensity);
 		}
 
-		hist_new_intensity = std::vector<float>(255); // might need to be 256 as values are 0-255
-
-		// calculate KL divergence from previous histogram
-		calc_intensity_histogram(frame, hist_new_intensity, contrib_intensity);
-		intensity_divergence = calc_kl_divergence(hist_new_intensity, hist_old_intensity);
-		std::cout << "intensity_divergence = " << intensity_divergence << std::endl;
 		slambench::io::SLAMFrame* grey_frame = new IdentityFrame(frame);
-		buffered_frames.push_back(grey_frame);
-		hist_old_intensity = hist_new_intensity;
-		has_int = true;
+		buffered_int.push_back(grey_frame);
 	}
 	
+	// buffering depth frames
 	if (frame->FrameSensor == (slambench::io::Sensor *)depth_sensor){
+		std::cout << "depth frame " << std::endl;
 		std::vector<sb_float3> norms = depth_to_norm(frame);
 
 		if (!hist_old_depth.size()){
@@ -434,6 +441,35 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 			calc_depth_histogram(masked_norms, hist_old_depth, contrib_depth);
 		}
 
+		slambench::io::SLAMFrame* depth_frame = new IdentityFrame(frame);
+		buffered_depth.push_back(depth_frame);
+	}
+
+	// buffering rgb frames
+	if (frame->FrameSensor == (slambench::io::Sensor *)rgb_sensor){
+		std::cout << "rgb frame " << std::endl;
+		slambench::io::SLAMFrame* rgb_frame = new IdentityFrame(frame);
+		buffered_rgb.push_back(rgb_frame);
+	}
+
+	// check whether the filter has enough frames
+	if (!buffered_rgb.empty() && !buffered_int.empty() && !buffered_depth.empty()) {
+
+		slambench::io::SLAMFrame* last_intensity_frame = buffered_int.back();
+		slambench::io::SLAMFrame* last_depth_frame = buffered_depth.back();
+		slambench::io::SLAMFrame* last_rgb_frame = buffered_rgb.back();
+
+		//*** compute divergence for intensity
+		hist_new_intensity = std::vector<float>(255); // might need to be 256 as values are 0-255
+
+		// calculate KL divergence from previous histogram
+		calc_intensity_histogram(last_intensity_frame, hist_new_intensity, contrib_intensity);
+		float intensity_divergence = calc_kl_divergence(hist_new_intensity, hist_old_intensity);
+		std::cout << "intensity_divergence = " << intensity_divergence << std::endl;
+		hist_old_intensity = hist_new_intensity;
+
+		//*** compute divergence for depth
+		std::vector<sb_float3> norms = depth_to_norm(last_depth_frame);
 		hist_new_depth = std::vector<float>(normal_bins.size());
 		std::vector<int> mask_new = calc_mask(norms);
 		std::vector<int> mask_combined;
@@ -442,45 +478,41 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 
 		// calculate KL divergence from previous histogram
 		calc_depth_histogram(remove_zeroes(norms, mask_new), hist_new_depth, contrib_depth);
-		depth_divergence = calc_kl_divergence(hist_new_depth, hist_old_depth);
+		float depth_divergence = calc_kl_divergence(hist_new_depth, hist_old_depth);
 		std::cout << "depth_divergence = " << depth_divergence << std::endl;
-		slambench::io::SLAMFrame* depth_frame = new IdentityFrame(frame);
-		buffered_frames.push_back(depth_frame);
-		hist_old_depth = hist_new_depth;
-		has_depth = true;
-	}
 
-	// feed buffer
-	if (frame->FrameSensor == (slambench::io::Sensor *)rgb_sensor){
-		std::cout << "rgb frame " << std::endl;
-		slambench::io::SLAMFrame* rgb_frame = new IdentityFrame(frame);
-		buffered_frames.push_back(rgb_frame);
-		has_rgb = true;
-		
-	}
-
-	// check whether the filter has enough frames
-	if (has_rgb && has_int && has_depth) {
-		combined_divergence = abs(intensity_divergence) + abs(depth_divergence);
+		float combined_divergence = abs(intensity_divergence) + abs(depth_divergence);
 		std::cout << "combined_divergence = " << combined_divergence << std::endl;
+		hist_old_depth = hist_new_depth;
 
-		has_rgb, has_int, has_depth = false; // reset the flags
 		// compare histogram with threshold
 		if (combined_divergence < threshold) {
 			std::cout << "** Drop all buffered frames." << std::endl; // skip frame
-			buffered_frames.clear();
+			free_data_queue(buffered_int);
+			free_data_queue(buffered_depth);
+			free_data_queue(buffered_rgb);
 			return enough;
 		} else { 
 			// send the frames to update if no enough frame for algo
+			std::deque<slambench::io::SLAMFrame*> filtered_frames;
+			filtered_frames.push_back(last_rgb_frame);
+			filtered_frames.push_back(last_intensity_frame);
+			filtered_frames.push_back(last_depth_frame);
 			do {
-				if (!buffered_frames.empty()) { // check if there are frames in buffer
-					slambench::io::SLAMFrame *new_frame = new IdentityFrame(buffered_frames.front());
+				// check if there are frames in buffer
+				if (!filtered_frames.empty()) {
+					slambench::io::SLAMFrame* new_frame = filtered_frames.front();
 					enough = lib->c_sb_update_frame(lib, new_frame); // update frame
-					buffered_frames.pop_front();
 					new_frame->FreeData();
 					delete new_frame;
-					if (enough) { // clear buffer if there are enough frames for algo
-						buffered_frames.clear();
+					filtered_frames.pop_front();
+				
+					// clear buffer if there are enough frames for algo
+					if (enough) {
+						free_data_queue(buffered_int);
+						free_data_queue(buffered_depth);
+						free_data_queue(buffered_rgb);
+						free_data_queue(filtered_frames);
 					}
 				} else {
 					return enough;
@@ -488,10 +520,6 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 			} while (!enough);
 		}
 	}
-	
-	intensity_divergence = 0;
-	depth_divergence = 0;
-	combined_divergence = 0;
 
 	return enough;
 }
