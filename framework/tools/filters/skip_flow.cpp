@@ -9,7 +9,6 @@
 #include <io/IdentityFrame.h>
 #include <io/sensor/CameraSensorFinder.h>
 #include <random>
-#include <tuple>
 
 double probability = 0;
 double default_probability = 0.1;
@@ -35,7 +34,7 @@ bool sb_init_filter (SLAMBenchFilterLibraryHelper * filter_settings) {
 	return true;
 }
 
-std::tuple<bool, bool> sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib, slambench::io::SLAMFrame * frame) {
+bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib, slambench::io::SLAMFrame * frame) {
 	// Randomize dropping
 	std::random_device rd;
 	std::mt19937_64 gen(rd());
@@ -64,7 +63,7 @@ std::tuple<bool, bool> sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , 
 		delete filtered_frame;
 	}
 	
-	return std::make_tuple(ongoing, true);
+	return ongoing;
 }
 
 bool sb_process_once_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib) {

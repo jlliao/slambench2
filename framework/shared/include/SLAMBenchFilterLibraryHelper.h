@@ -21,7 +21,6 @@
 #include <SLAMBenchUI.h>
 #include <vector>
 #include <Eigen/Core>
-#include <tuple>
 
 class SLAMBenchLibraryHelper;
 
@@ -38,7 +37,7 @@ public:
 	bool                              (* c_sb_new_filter_configuration) (SLAMBenchFilterLibraryHelper * ) ;
 	bool                              (* c_sb_init_filter)    (SLAMBenchFilterLibraryHelper * ) ;
 	slambench::io::SLAMFrame *        (* c_sb_process_filter) (SLAMBenchFilterLibraryHelper *, slambench::io::SLAMFrame * ) ;
-	std::tuple<bool, bool>			  (* c_sb_update_frame_filter) (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper *, slambench::io::SLAMFrame * ) ;
+	bool							  (* c_sb_update_frame_filter) (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper *, slambench::io::SLAMFrame * ) ;
 	bool 							  (* c_sb_process_once_filter) (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * ) ;
 
 private:

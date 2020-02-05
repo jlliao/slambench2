@@ -40,7 +40,6 @@ float e = sqrt(d);
 float f = sqrt(c);
 
 std::deque<slambench::io::SLAMFrame*> buffered_frames;
-std::deque<slambench::io::SLAMFrame*> filtered_frames;
 bool has_rgb, has_int, has_depth = false;
 
 std::vector<sb_float3> verts = {
@@ -395,28 +394,13 @@ bool sb_init_filter (SLAMBenchFilterLibraryHelper * filter_settings) {
 		
 	return true;
 }
-
-std::tuple<bool, bool> sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib, slambench::io::SLAMFrame * frame) {
-	bool ongoing = true;
-	bool no_frame = true;
+bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib, slambench::io::SLAMFrame * frame) {
+	bool enough = false;
 
 	float intensity_divergence = 0;
   	float depth_divergence = 0;
 	float combined_divergence = 0;
 	std::vector<float> hist_new_intensity, hist_new_depth;
-	slambench::io::SLAMFrame *new_frame = nullptr;
-
-	if (!filtered_frames.empty()) {
-		new_frame = new IdentityFrame(filtered_frames.front());
-		ongoing = not lib->c_sb_update_frame(lib, new_frame);
-		filtered_frames.pop_front();
-
-		new_frame->FreeData();
-		delete new_frame;
-		
-		no_frame = filtered_frames.empty();
-		return std::make_tuple(ongoing, no_frame);
-	}
 
 	if (frame->FrameSensor == (slambench::io::Sensor *)grey_sensor){
 		// initialise histogram from first frame
@@ -466,6 +450,7 @@ std::tuple<bool, bool> sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , 
 		has_depth = true;
 	}
 
+	// feed buffer
 	if (frame->FrameSensor == (slambench::io::Sensor *)rgb_sensor){
 		std::cout << "rgb frame " << std::endl;
 		slambench::io::SLAMFrame* rgb_frame = new IdentityFrame(frame);
@@ -478,17 +463,27 @@ std::tuple<bool, bool> sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , 
 	if (has_rgb && has_int && has_depth) {
 		combined_divergence = abs(intensity_divergence) + abs(depth_divergence);
 		std::cout << "combined_divergence = " << combined_divergence << std::endl;
-		if (combined_divergence < threshold) { // no motion
+
+		has_rgb, has_int, has_depth = false; // reset the flags
+		// compare histogram with threshold
+		if (combined_divergence < threshold) {
 			std::cout << "** Drop all buffered frames." << std::endl; // skip frame
 			buffered_frames.clear();
-			has_rgb, has_int, has_depth = false;
-			return std::make_tuple(ongoing, no_frame);
-		} else { // has motion
-			filtered_frames = buffered_frames;
-			buffered_frames.clear();
-			no_frame = false;
-			has_rgb, has_int, has_depth = false;
-			return std::make_tuple(ongoing, no_frame);
+			return enough;
+		} else { 
+			// send the frames to update
+			do {
+				if (!buffered_frames.empty()) { // check if there are frames in buffer
+					slambench::io::SLAMFrame *new_frame = buffered_frames.front();
+					enough = lib->c_sb_update_frame(lib, new_frame); // update frame
+					buffered_frames.pop_front();
+					if (enough) { // clear buffer if there are enough frames for algo
+						buffered_frames.clear();
+					}
+				} else {
+					return enough;
+				}
+			} while (!enough);
 		}
 	}
 	
@@ -496,7 +491,7 @@ std::tuple<bool, bool> sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , 
 	depth_divergence = 0;
 	combined_divergence = 0;
 
-	return std::make_tuple(ongoing, no_frame);
+	return enough;
 }
 
 bool sb_process_once_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib) {

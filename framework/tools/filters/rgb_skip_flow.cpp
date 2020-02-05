@@ -2,7 +2,6 @@
 #include <io/IdentityFrame.h>
 #include <io/sensor/CameraSensorFinder.h>
 #include <vector>
-#include <tuple>
 
 double threshold = 0;
 double default_threshold = 0.005;
@@ -79,7 +78,7 @@ bool sb_init_filter(SLAMBenchFilterLibraryHelper *filter_settings)
     return true;
 }
 // TODO Update calc_histogram instances for each channel
-std::tuple<bool, bool> sb_update_frame_filter(SLAMBenchFilterLibraryHelper *, SLAMBenchLibraryHelper *lib, slambench::io::SLAMFrame *frame)
+bool sb_update_frame_filter(SLAMBenchFilterLibraryHelper *, SLAMBenchLibraryHelper *lib, slambench::io::SLAMFrame *frame)
 {
     bool ongoing = false;
     slambench::io::SLAMFrame *new_frame = nullptr;
@@ -89,7 +88,7 @@ std::tuple<bool, bool> sb_update_frame_filter(SLAMBenchFilterLibraryHelper *, SL
         ongoing = not lib->c_sb_update_frame(lib, new_frame);
         new_frame->FreeData();
         delete new_frame;
-        return std::make_tuple(ongoing, true);
+        return ongoing;
     }
     float contrib = 1 / (float)(frame->GetSize()); // set contribution according to first frame resolution
 
@@ -155,7 +154,7 @@ std::tuple<bool, bool> sb_update_frame_filter(SLAMBenchFilterLibraryHelper *, SL
         delete new_frame;
     }
 
-    return std::make_tuple(ongoing, true);
+    return ongoing;
 }
 
 bool sb_process_once_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib) {

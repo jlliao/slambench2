@@ -87,6 +87,8 @@
         "hash_map": "cpp",
         "cfenv": "cpp",
         "cinttypes": "cpp",
-        "*.ipp": "cpp"
-    }
+        "*.ipp": "cpp",
+        "core": "cpp"
+    },
+    "cmake.configureOnOpen": false
 }

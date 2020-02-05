@@ -11,7 +11,6 @@
 #include <io/sensor/DepthSensor.h>
 #include <array>
 #include <vector>
-#include <tuple>
 
 
 struct ScalarComparer {
@@ -432,7 +431,7 @@ bool sb_init_filter (SLAMBenchFilterLibraryHelper * filter_settings) {
 	return true;
 }
 
-std::tuple<bool, bool> sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , 
+bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , 
 												SLAMBenchLibraryHelper * lib, 
 												slambench::io::SLAMFrame * frame) {
 	float intensity_divergence = 0;
@@ -564,7 +563,7 @@ std::tuple<bool, bool> sb_update_frame_filter (SLAMBenchFilterLibraryHelper * ,
 		delete new_frame;
 	}
 	
-	return std::make_tuple(ongoing, true);
+	return ongoing;
 }
 
 bool sb_process_once_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib) {

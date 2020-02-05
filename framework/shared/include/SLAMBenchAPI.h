@@ -15,7 +15,6 @@
 #include <SLAMBenchFilterLibraryHelper.h>
 
 #include <Eigen/Core>
-#include <tuple>
 
 namespace slambench {
 	namespace io {
@@ -60,7 +59,7 @@ bool sb_clean_slam_system();
 slambench::io::SLAMFrame *  sb_process_filter           (SLAMBenchFilterLibraryHelper * slam_settings, slambench::io::SLAMFrame * type) ;
 bool                        sb_new_filter_configuration (SLAMBenchFilterLibraryHelper * filter_settings);
 bool                        sb_init_filter (SLAMBenchFilterLibraryHelper * filter_settings);
-std::tuple<bool, bool> 		sb_update_frame_filter		(SLAMBenchFilterLibraryHelper * slam_settings, SLAMBenchLibraryHelper * lib, slambench::io::SLAMFrame * type) ;
+bool 						sb_update_frame_filter		(SLAMBenchFilterLibraryHelper * slam_settings, SLAMBenchLibraryHelper * lib, slambench::io::SLAMFrame * type) ;
 bool 						sb_process_once_filter		(SLAMBenchFilterLibraryHelper * slam_settings, SLAMBenchLibraryHelper * lib) ;
 
 /*
@@ -80,7 +79,7 @@ bool c_sb_clean_slam_system();
 bool  c_sb_new_filter_configuration (void * ) ;
 bool  c_sb_init_filter (void * ) ;
 void *c_sb_process_filter (void *, void * ) ;
-std::tuple<bool, bool> c_sb_update_frame_filter (void *, void *, void * ) ;
+bool  c_sb_update_frame_filter (void *, void *, void * ) ;
 bool  c_sb_process_once_filter (void *, void * ) ;
 }
 

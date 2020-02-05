@@ -334,7 +334,6 @@ void SLAMBenchConfiguration::compute_loop_algorithm(SLAMBenchConfiguration* conf
 	bool default_true = true;
 	bool * stay_on = &default_true;
 	bool ongoing = false;
-	bool no_frame = true;
 	if (remote_stay_on) stay_on = remote_stay_on;
 	
 	while(*stay_on) {
@@ -356,23 +355,21 @@ void SLAMBenchConfiguration::compute_loop_algorithm(SLAMBenchConfiguration* conf
 
 		slambench::io::SLAMFrame * current_frame = nullptr;
 
-		if(no_frame) {
-			if(config->input_stream_ == nullptr) {
-				std::cerr << "No input loaded." << std::endl;
-				break;
-			}
-		
-			current_frame = config->input_stream_->GetNextFrame();
+		if (config->input_stream_ == nullptr){
+			std::cerr << "No input loaded." << std::endl;
+			break;
+		}
 
-			if (current_frame == nullptr) {
-				std::cerr << "Last frame processed." << std::endl;
-				break;
-			}
+		current_frame = config->input_stream_->GetNextFrame();
 
-			if(!*stay_on) {
-				std::cerr << "!*stay_on ==> break;" << std::endl;
-				break;
-			}
+		if (current_frame == nullptr){
+			std::cerr << "Last frame processed." << std::endl;
+			break;
+		}
+
+		if (!*stay_on){
+			std::cerr << "!*stay_on ==> break;" << std::endl;
+			break;
 		}
 
 		// ********* [[ NEW FRAME PROCESSED BY ALGO ]] *********
@@ -391,7 +388,7 @@ void SLAMBenchConfiguration::compute_loop_algorithm(SLAMBenchConfiguration* conf
 			// ********* [[ SEND THE FRAME ]] *********
 			if (lib->get_filter_libraries().size() > 0) {
 				for (auto filter : lib->get_filter_libraries()) {
-					std::tie(ongoing, no_frame)=filter->c_sb_update_frame_filter(filter,lib,current_frame);
+					ongoing=not filter->c_sb_update_frame_filter(filter,lib,current_frame);
 				}
 			} else {
 				ongoing=not lib->c_sb_update_frame(lib,current_frame);
