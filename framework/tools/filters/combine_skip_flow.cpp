@@ -471,12 +471,14 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 			buffered_frames.clear();
 			return enough;
 		} else { 
-			// send the frames to update
+			// send the frames to update if no enough frame for algo
 			do {
 				if (!buffered_frames.empty()) { // check if there are frames in buffer
-					slambench::io::SLAMFrame *new_frame = buffered_frames.front();
+					slambench::io::SLAMFrame *new_frame = new IdentityFrame(buffered_frames.front());
 					enough = lib->c_sb_update_frame(lib, new_frame); // update frame
 					buffered_frames.pop_front();
+					new_frame->FreeData();
+					delete new_frame;
 					if (enough) { // clear buffer if there are enough frames for algo
 						buffered_frames.clear();
 					}
