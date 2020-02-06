@@ -430,10 +430,10 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 	// buffering depth frames
 	if (frame->FrameSensor == (slambench::io::Sensor *)depth_sensor){
 		std::cout << "depth frame " << std::endl;
-		std::vector<sb_float3> norms = depth_to_norm(frame);
 
 		if (!hist_old_depth.size()){
 			// initialise histogram and mask for first frame
+			std::vector<sb_float3> norms = depth_to_norm(frame);
 			hist_old_depth.resize(normal_bins.size());
 			mask_old = calc_mask(norms);
 			float contrib_depth = (float)1 / count_non_zero(invert_mask(mask_old));
