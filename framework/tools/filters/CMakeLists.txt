@@ -28,6 +28,10 @@ add_library(rgb-skip-flow-filter SHARED rgb_skip_flow.cpp )
 target_link_libraries(rgb-skip-flow-filter PRIVATE ${SLAMBENCH_C_WRAPPER} )
 target_include_directories(rgb-skip-flow-filter PRIVATE ${SLAMBENCH_INCLUDE_DIR})
 
+add_library(int-skip-flow-filter SHARED int_skip_flow.cpp )
+target_link_libraries(int-skip-flow-filter PRIVATE ${SLAMBENCH_C_WRAPPER} )
+target_include_directories(int-skip-flow-filter PRIVATE ${SLAMBENCH_INCLUDE_DIR})
+
 add_library(skip-filter    SHARED  skip_frame.cpp )
 target_link_libraries(skip-filter PRIVATE ${SLAMBENCH_C_WRAPPER} )
 target_include_directories(skip-filter PRIVATE ${SLAMBENCH_INCLUDE_DIR}) 

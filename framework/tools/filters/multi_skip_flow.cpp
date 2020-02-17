@@ -1,38 +1,28 @@
-/*
- * skip_flow.cpp
- *
- *  Created on: Nov 22, 2019
- *      Author: jianglong
- */
-
 #include <SLAMBenchAPI.h>
 #include <io/IdentityFrame.h>
 #include <io/sensor/CameraSensorFinder.h>
 #include <io/sensor/DepthSensor.h>
+#include <io/FrameBuffer.h>
 #include <array>
-#include <vector>
 
-
-struct ScalarComparer {
-    bool operator()(const sb_float3 &v1, const sb_float3 &v2) {
-        return (v1.x < v2.x) ||
-               (v1.x == v2.x && v1.y < v2.y) ||
-               (v1.x == v2.x && v1.y == v2.y && v1.z < v2.z);
-    }
+struct ScalarComparer
+{
+	bool operator()(const sb_float3 &v1, const sb_float3 &v2)
+	{
+		return (v1.x < v2.x) ||
+			   (v1.x == v2.x && v1.y < v2.y) ||
+			   (v1.x == v2.x && v1.y == v2.y && v1.z < v2.z);
+	}
 };
 
 double threshold = 0;
-double default_threshold = 0.00001;
+double default_threshold = 0.0001;
 static slambench::io::DepthSensor *depth_sensor;
 static slambench::io::CameraSensor *grey_sensor;
 static slambench::io::CameraSensor *rgb_sensor;
-std::vector<float> hist_old_r;
-std::vector<float> hist_old_g;
-std::vector<float> hist_old_b;
 std::vector<float> hist_old_depth, hist_old_intensity;
-std::map<char, std::vector<float>*> hists_old_rgb; 
 std::vector<int> mask_old;
-float contrib_rgb, contrib_depth, contrib_intensity;
+float contrib_depth, contrib_intensity;
 std::vector<sb_float3> normal_bins;
 int frames_processed = 0;
 // const int order = 0; // order of subdivisions of hemisphere
@@ -45,42 +35,40 @@ float e = sqrt(d);
 float f = sqrt(c);
 
 std::vector<sb_float3> verts = {
-                                {make_sb_float3( 0,  0,  1),
-                                 make_sb_float3( b,  0,  a),
-                                 make_sb_float3( d,  f,  a),
-                                 make_sb_float3(-c,  e,  a),
-                                 make_sb_float3(-c, -e,  a),
-                                 make_sb_float3( d, -f,  a),
-                                 make_sb_float3(-d,  f, -a),
-                                 make_sb_float3( c,  e, -a),
-                                 make_sb_float3( c, -e, -a),
-                                 make_sb_float3(-d, -f, -a),
-                                 make_sb_float3(-b,  0, -a),
-                                 make_sb_float3( 0,  0, -1)}
-};
+	{make_sb_float3(0, 0, 1),
+	 make_sb_float3(b, 0, a),
+	 make_sb_float3(d, f, a),
+	 make_sb_float3(-c, e, a),
+	 make_sb_float3(-c, -e, a),
+	 make_sb_float3(d, -f, a),
+	 make_sb_float3(-d, f, -a),
+	 make_sb_float3(c, e, -a),
+	 make_sb_float3(c, -e, -a),
+	 make_sb_float3(-d, -f, -a),
+	 make_sb_float3(-b, 0, -a),
+	 make_sb_float3(0, 0, -1)}};
 
 std::vector<std::array<sb_float3, 3>> tris = {
-                                               {{verts[ 0], verts[ 1], verts[ 2]},
-                                                {verts[ 0], verts[ 2], verts[ 3]},
-                                                {verts[ 0], verts[ 3], verts[ 4]},
-                                                {verts[ 0], verts[ 4], verts[ 5]},
-                                                {verts[ 0], verts[ 5], verts[ 1]},
-                                                {verts[ 7], verts[ 1], verts[ 2]},
-                                                {verts[ 6], verts[ 2], verts[ 3]},
-                                                {verts[10], verts[ 3], verts[ 4]},
-                                                {verts[ 9], verts[ 4], verts[ 5]},
-                                                {verts[ 8], verts[ 5], verts[ 1]},
-                                                {verts[ 3], verts[ 6], verts[10]},
-                                                {verts[ 2], verts[ 7], verts[ 6]},
-                                                {verts[ 1], verts[ 8], verts[ 7]},
-                                                {verts[ 5], verts[ 9], verts[ 8]},
-                                                {verts[ 4], verts[10], verts[ 9]},
-                                                {verts[11], verts[ 6], verts[10]},
-                                                {verts[11], verts[ 7], verts[ 6]},
-                                                {verts[11], verts[ 8], verts[ 7]},
-                                                {verts[11], verts[ 9], verts[ 8]},
-                                                {verts[11], verts[10], verts[ 9]}}
-};
+	{{verts[0], verts[1], verts[2]},
+	 {verts[0], verts[2], verts[3]},
+	 {verts[0], verts[3], verts[4]},
+	 {verts[0], verts[4], verts[5]},
+	 {verts[0], verts[5], verts[1]},
+	 {verts[7], verts[1], verts[2]},
+	 {verts[6], verts[2], verts[3]},
+	 {verts[10], verts[3], verts[4]},
+	 {verts[9], verts[4], verts[5]},
+	 {verts[8], verts[5], verts[1]},
+	 {verts[3], verts[6], verts[10]},
+	 {verts[2], verts[7], verts[6]},
+	 {verts[1], verts[8], verts[7]},
+	 {verts[5], verts[9], verts[8]},
+	 {verts[4], verts[10], verts[9]},
+	 {verts[11], verts[6], verts[10]},
+	 {verts[11], verts[7], verts[6]},
+	 {verts[11], verts[8], verts[7]},
+	 {verts[11], verts[9], verts[8]},
+	 {verts[11], verts[10], verts[9]}}};
 
 sb_float3 add_sb_float3(sb_float3 arg1, sb_float3 arg2)
 {
@@ -249,30 +237,6 @@ std::vector<int> calc_mask(std::vector<sb_float3> normal_map)
 	return norms_mask;
 }
 
-void calc_rgb_histogram(slambench::io::SLAMFrame *frame, std::vector<float> &hist,
-                    float contrib, char channel) {
-  std::fill(hist.begin(), hist.end(), 1e-10);
-  
-  // get start and end pointers for given frame
-  unsigned char *imageStart = (unsigned char *) frame->GetData(); // get pointer to first pixel value
-
-  switch (channel) {
-  case 'r' : break;
-  case 'g' : *imageStart += 1; break;
-  case 'b' : *imageStart += 2; break;
-  default : throw std::logic_error("unhandled channel");
-  }
-  // loop through histogram and add occurances of values 0-255 (by channel) to respective bins
-  // assuming that RGB values are interleaved: r1, g1, b1, r2, g2, b2, r3,...
-  for (auto i = 0; i <= 255; i++) {
-    if (imageStart[(i * 3)] != 0) {
-      hist[imageStart[(i * 3)] - 1] += contrib;
-    }
-  }
-  
-  frame->FreeData();
-}
-
 void calc_intensity_histogram(slambench::io::SLAMFrame *frame,
 							  std::vector<float> &hist,
 							  float contrib)
@@ -345,15 +309,15 @@ float calc_kl_divergence(const std::vector<float> &hist_new,
 	return kl_divergence;
 }
 
-float calc_rgb_kl_divergence(const std::vector<float> &hist_new,
-                         const std::vector<float> &hist_old)
+bool sb_new_filter_configuration(SLAMBenchFilterLibraryHelper *filter_settings)
 {
-    float kl_divergence = 0;
-    for (int bin = 0; bin < 255; bin++)
-    {
-        kl_divergence += hist_new[bin] * log(hist_new[bin] / hist_old[bin]); // they use log2 for some reason
-    }
-    return kl_divergence;
+	// initialise filter with threshold parameter
+	filter_settings->addParameter(TypedParameter<double>("fth",
+														 "skip-threshold",
+														 "Numerical value to specify KL divergence threshold",
+														 &threshold,
+														 &default_threshold));
+	return true;
 }
 
 void init_normal_bins(std::vector<std::array<sb_float3, 3>> tris,
@@ -404,48 +368,30 @@ void init_normal_bins(std::vector<std::array<sb_float3, 3>> tris,
 	normal_bins = std::vector<sb_float3>(normals_set.begin(), normals_set.end());
 }
 
-bool sb_new_filter_configuration (SLAMBenchFilterLibraryHelper * filter_settings) {
-	// initialise filter with threshold parameter
-	filter_settings->addParameter(TypedParameter<double>("fth",
-														"skip-threshold",
-														"Numerical value to specify KL divergence threshold",
-														&threshold,
-														&default_threshold));
-	return true;
-}
-
-bool sb_init_filter (SLAMBenchFilterLibraryHelper * filter_settings) {
+bool sb_init_filter(SLAMBenchFilterLibraryHelper *filter_settings)
+{
 	// Initialise sensors
 	slambench::io::CameraSensorFinder sensor_finder;
-	depth_sensor = (slambench::io::DepthSensor *) sensor_finder.FindOne(filter_settings->get_sensors(),
-										{{"camera_type", "depth"}});
+	depth_sensor = (slambench::io::DepthSensor *)sensor_finder.FindOne(filter_settings->get_sensors(),
+																	   {{"camera_type", "depth"}});
 	grey_sensor = sensor_finder.FindOne(filter_settings->get_sensors(),
 										{{"camera_type", "grey"}});
 	rgb_sensor = sensor_finder.FindOne(filter_settings->get_sensors(),
-										{{"camera_type", "rgb"}});
-	assert(rgb_sensor);  // make sure sensor is found
+									   {{"camera_type", "rgb"}});
+	assert(rgb_sensor); // make sure sensor is found
 	assert(depth_sensor);
 	assert(grey_sensor);
 	init_normal_bins(tris, normal_bins, order);
-	
+
 	return true;
 }
 
-bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , 
-												SLAMBenchLibraryHelper * lib, 
-												slambench::io::SLAMFrame * frame) {
-	float intensity_divergence = 0;
-	float depth_divergence = 0;
-	float rgb_divergence = 0;
-
+bool sb_update_frame_filter(SLAMBenchFilterLibraryHelper *, SLAMBenchLibraryHelper *lib, slambench::io::SLAMFrame *frame)
+{
+	bool enough = false;
+	float divergence = 0;
 	std::vector<float> hist_new_intensity, hist_new_depth;
-	std::vector<float> hist_new_r, hist_new_g, hist_new_b;
 	slambench::io::SLAMFrame *new_frame = nullptr;
-	std::cout << "Frame number: " << frames_processed++ << std::endl;
-	std::cout << "Frame time: " << frame->Timestamp << std::endl;
-
-	bool ongoing = false;
-
 	if (frame->FrameSensor == (slambench::io::Sensor *)grey_sensor)
 	{
 		// initialise histogram from first frame
@@ -460,15 +406,8 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * ,
 
 		// calculate KL divergence from previous histogram
 		calc_intensity_histogram(frame, hist_new_intensity, contrib_intensity);
-		intensity_divergence = calc_kl_divergence(hist_new_intensity, hist_old_intensity);
-		std::cout << "intensity_divergence = " << intensity_divergence << std::endl;
-		if (intensity_divergence < threshold) {
-			std::cout << "** Skip one frame." << std::endl; // skip frame
-		} else {
-			// update histogram to compare new frames against
-			hist_old_intensity = hist_new_intensity;
-			new_frame = new IdentityFrame(frame); // assigns new_frame to a copy of curent_frame
-		}
+		divergence = abs(calc_kl_divergence(hist_new_intensity, hist_old_intensity));
+		std::cout << "intensity_divergence = " << divergence << std::endl;
 	}
 	else if (frame->FrameSensor == (slambench::io::Sensor *)depth_sensor)
 	{
@@ -492,78 +431,32 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * ,
 
 		// calculate KL divergence from previous histogram
 		calc_depth_histogram(remove_zeroes(norms, mask_new), hist_new_depth, contrib_depth);
-		depth_divergence = calc_kl_divergence(hist_new_depth, hist_old_depth);
-		std::cout << "depth_divergence = " << depth_divergence << std::endl;
-		if (depth_divergence < threshold) {
-			std::cout << "** Skip one frame." << std::endl; // skip frame
-		} else {
-			// update histogram to compare new frames against
-			hist_old_depth = hist_new_depth;
-			new_frame = new IdentityFrame(frame); // assigns new_frame to a copy of curent_frame
-		}
+		divergence = abs(calc_kl_divergence(hist_new_depth, hist_old_depth));
+		std::cout << "depth_divergence = " << divergence << std::endl;
 	}
-	else if (frame->FrameSensor == (slambench::io::Sensor *)rgb_sensor) {
-		float contrib_rgb = 1 / (float) (frame->GetSize()); // set contribution according to first frame resolution
-  
-  		// initialise histograms for each channel of first frame
-		if (hists_old_rgb.find('r') == hists_old_rgb.end()) {
-			hist_old_r.resize(255);
-			calc_rgb_histogram(frame, hist_old_r, contrib_rgb, 'r');
-			hists_old_rgb.insert(std::pair<char, std::vector<float>*>('r', &hist_old_r));
-		}
-		if (hists_old_rgb.find('g') == hists_old_rgb.end()) {
-			hist_old_g.resize(255);
-			calc_rgb_histogram(frame, hist_old_g, contrib_rgb, 'g');
-			hists_old_rgb.insert(std::pair<char, std::vector<float>*>('g', &hist_old_g));
-		}
-		if (hists_old_rgb.find('b') == hists_old_rgb.end()) {
-			hist_old_b.resize(255);
-			calc_rgb_histogram(frame, hist_old_b, contrib_rgb, 'b');
-			hists_old_rgb.insert(std::pair<char, std::vector<float>*>('b', &hist_old_b));
-		}
-
-		std::vector<float> hist_new_r = std::vector<float>(255);
-		std::vector<float> hist_new_g = std::vector<float>(255);
-		std::vector<float> hist_new_b = std::vector<float>(255);
-		// calculate intensity distributions for new frame
-		calc_rgb_histogram(frame, hist_new_r, contrib_rgb, 'r');
-		calc_rgb_histogram(frame, hist_new_g, contrib_rgb, 'g');
-		calc_rgb_histogram(frame, hist_new_b, contrib_rgb, 'b');
-		// compare old and new frames
-		float rgb_divergence = (calc_rgb_kl_divergence(hist_new_r, *hists_old_rgb.at('r')) +
-								calc_rgb_kl_divergence(hist_new_g, *hists_old_rgb.at('g')) +
-								calc_rgb_kl_divergence(hist_new_b, *hists_old_rgb.at('b'))) / 3;
-		std::cout << "rgb_divergence = " << rgb_divergence << std::endl;
-		if (rgb_divergence < threshold) {
-			std::cout << "** Skip one frame." << std::endl; // skip frame
-		} else {
-			hists_old_rgb['r'] = &hist_new_r;
-			hists_old_rgb['g'] = &hist_new_g;
-			hists_old_rgb['b'] = &hist_new_b;
-			new_frame = new IdentityFrame(frame); // assigns new_frame to a copy of curent_frame
-		}
-	}
-	else {
-		new_frame = new IdentityFrame(frame); 
+	else
+	{
+		divergence = 100; // definitely update the frame for other sensors
 	}
 
-	if (new_frame) {
-		ongoing = not lib->c_sb_update_frame(lib, new_frame);
-	} else {
-		ongoing = true;
+	if (divergence < threshold)
+	{
+		std::cout << "** Skip one frame." << std::endl; // skip frame
 	}
-
-	intensity_divergence = 0;
-	depth_divergence = 0;
-	rgb_divergence = 0;
-
-	// Free the copy
-	if (new_frame) {
+	else
+	{
+		new_frame = new IdentityFrame(frame); // assigns new_frame to a copy of curent_frame
+		enough = lib->c_sb_update_frame(lib, new_frame);
 		new_frame->FreeData();
 		delete new_frame;
+		if (divergence != 100) {
+			// update histogram to compare new frames against
+			hist_old_intensity = hist_new_intensity;
+			hist_old_depth = hist_new_depth;
+		}
 	}
-	
-	return ongoing;
+
+	return enough;
 }
 
 bool sb_process_once_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib) {

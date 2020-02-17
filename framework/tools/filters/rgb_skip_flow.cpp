@@ -4,7 +4,7 @@
 #include <vector>
 
 double threshold = 0;
-double default_threshold = 0.005;
+double default_threshold = 0.0009;
 static slambench::io::CameraSensor *rgb_sensor;
 std::vector<float> hist_old_r;
 std::vector<float> hist_old_g;
@@ -80,16 +80,19 @@ bool sb_init_filter(SLAMBenchFilterLibraryHelper *filter_settings)
 // TODO Update calc_histogram instances for each channel
 bool sb_update_frame_filter(SLAMBenchFilterLibraryHelper *, SLAMBenchLibraryHelper *lib, slambench::io::SLAMFrame *frame)
 {
-    bool ongoing = false;
+    bool enough = false;
     slambench::io::SLAMFrame *new_frame = nullptr;
+
     if (frame->FrameSensor != (slambench::io::Sensor *)rgb_sensor)
     {   
+        std::cout << "update other frame" << std::endl;
         new_frame = new IdentityFrame(frame);
-        ongoing = not lib->c_sb_update_frame(lib, new_frame);
+        enough = lib->c_sb_update_frame(lib, new_frame);
         new_frame->FreeData();
         delete new_frame;
-        return ongoing;
+        return enough;
     }
+
     float contrib = 1 / (float)(frame->GetSize()); // set contribution according to first frame resolution
 
     // initialise histograms for each channel of first frame
@@ -140,21 +143,12 @@ bool sb_update_frame_filter(SLAMBenchFilterLibraryHelper *, SLAMBenchLibraryHelp
     // Update the frame
     if (new_frame)
     {
-        ongoing = not lib->c_sb_update_frame(lib, new_frame);
-    }
-    else
-    {
-        ongoing = true;
-    }
-
-    // Free the copy
-    if (new_frame)
-    {
+        enough = lib->c_sb_update_frame(lib, new_frame);
         new_frame->FreeData();
         delete new_frame;
     }
 
-    return ongoing;
+    return enough;
 }
 
 bool sb_process_once_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib) {

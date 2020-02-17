@@ -371,12 +371,9 @@ void init_normal_bins(std::vector<std::array<sb_float3, 3>> tris,
 	normal_bins = std::vector<sb_float3>(normals_set.begin(), normals_set.end());
 }
 
-void free_data_queue(std::deque<slambench::io::SLAMFrame*> frame_queue) {
-	for (auto temp_frame : frame_queue) {
-		if (temp_frame) {
-			temp_frame->FreeData();
-			delete temp_frame;
-		}
+void print(std::vector<float> const &input) {
+	for (int i = 0; i < input.size(); i++) {
+		std::cout << input.at(i) << ' ';
 	}
 }
 
@@ -417,7 +414,7 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 	if (frame->FrameSensor == (slambench::io::Sensor *)grey_sensor){
 		std::cout << "grey frame " << std::endl;
 		// initialise histogram from first frame
-		float contrib_intensity = 1 / (float)(frame->GetSize()); // set contribution according to first frame resolution
+		contrib_intensity = 1 / (float)(frame->GetSize()); // set contribution according to first frame resolution
 		if (!hist_old_intensity.size()){
 			hist_old_intensity.resize(255);
 			calc_intensity_histogram(frame, hist_old_intensity, contrib_intensity);
@@ -436,7 +433,7 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 			std::vector<sb_float3> norms = depth_to_norm(frame);
 			hist_old_depth.resize(normal_bins.size());
 			mask_old = calc_mask(norms);
-			float contrib_depth = (float)1 / count_non_zero(invert_mask(mask_old));
+			contrib_depth = (float)1 / count_non_zero(invert_mask(mask_old));
 			std::vector<sb_float3> masked_norms = remove_zeroes(norms, mask_old);
 			calc_depth_histogram(masked_norms, hist_old_depth, contrib_depth);
 		}
@@ -465,10 +462,12 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 		// calculate KL divergence from previous histogram
 		calc_intensity_histogram(last_intensity_frame, hist_new_intensity, contrib_intensity);
 		float intensity_divergence = calc_kl_divergence(hist_new_intensity, hist_old_intensity);
-		std::cout << "intensity_divergence = " << intensity_divergence << std::endl;
-		hist_old_intensity = hist_new_intensity;
+		// print(hist_new_intensity);
+		// print(hist_old_intensity);
+		std::cout << "intensity_divergence = " << abs(intensity_divergence) << std::endl;
 
 		//*** compute divergence for depth
+		frame -> FreeData();
 		std::vector<sb_float3> norms = depth_to_norm(last_depth_frame);
 		hist_new_depth = std::vector<float>(normal_bins.size());
 		std::vector<int> mask_new = calc_mask(norms);
@@ -479,18 +478,17 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 		// calculate KL divergence from previous histogram
 		calc_depth_histogram(remove_zeroes(norms, mask_new), hist_new_depth, contrib_depth);
 		float depth_divergence = calc_kl_divergence(hist_new_depth, hist_old_depth);
-		std::cout << "depth_divergence = " << depth_divergence << std::endl;
+		std::cout << "depth_divergence = " << abs(depth_divergence) << std::endl;
 
 		float combined_divergence = abs(intensity_divergence) + abs(depth_divergence);
 		std::cout << "combined_divergence = " << combined_divergence << std::endl;
-		hist_old_depth = hist_new_depth;
 
 		// compare histogram with threshold
 		if (combined_divergence < threshold) {
 			std::cout << "** Drop all buffered frames." << std::endl; // skip frame
-			free_data_queue(buffered_int);
-			free_data_queue(buffered_depth);
-			free_data_queue(buffered_rgb);
+			buffered_int.clear();
+			buffered_depth.clear();
+			buffered_rgb.clear();
 			return enough;
 		} else { 
 			// send the frames to update if no enough frame for algo
@@ -498,21 +496,25 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 			filtered_frames.push_back(last_rgb_frame);
 			filtered_frames.push_back(last_intensity_frame);
 			filtered_frames.push_back(last_depth_frame);
+
+			// update histograms
+			hist_old_intensity = hist_new_intensity;
+			hist_old_depth = hist_new_depth;
 			do {
 				// check if there are frames in buffer
 				if (!filtered_frames.empty()) {
 					slambench::io::SLAMFrame* new_frame = filtered_frames.front();
+					frame -> FreeData();
 					enough = lib->c_sb_update_frame(lib, new_frame); // update frame
+					filtered_frames.pop_front();
 					new_frame->FreeData();
 					delete new_frame;
-					filtered_frames.pop_front();
 				
 					// clear buffer if there are enough frames for algo
 					if (enough) {
-						free_data_queue(buffered_int);
-						free_data_queue(buffered_depth);
-						free_data_queue(buffered_rgb);
-						free_data_queue(filtered_frames);
+						buffered_int.clear();
+						buffered_depth.clear();
+						buffered_rgb.clear();
 					}
 				} else {
 					return enough;
