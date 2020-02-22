@@ -19,12 +19,12 @@ bool sb_init_filter (SLAMBenchFilterLibraryHelper * filter_settings) {
 
 bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib, slambench::io::SLAMFrame * frame) {
 	// Create a copy
-	slambench::io::SLAMFrame * filtered_frame = new IdentityFrame(frame);
-	bool ongoing = not lib->c_sb_update_frame(lib, filtered_frame);
+	slambench::io::SLAMFrame * new_frame = new IdentityFrame(frame);
+	bool enough = lib->c_sb_update_frame(lib, new_frame);
 	// Free the copy
-	filtered_frame->FreeData();
-	delete filtered_frame;
-	return ongoing;
+	new_frame->FreeData();
+	delete new_frame;
+	return enough;
 }
 
 bool sb_process_once_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib) {

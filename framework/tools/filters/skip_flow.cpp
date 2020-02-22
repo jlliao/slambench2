@@ -36,9 +36,11 @@ bool sb_init_filter (SLAMBenchFilterLibraryHelper * filter_settings) {
 
 bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib, slambench::io::SLAMFrame * frame) {
 	// Randomize dropping
+	bool enough = false;
+
 	std::random_device rd;
 	std::mt19937_64 gen(rd());
-	slambench::io::SLAMFrame *filtered_frame = nullptr;
+	slambench::io::SLAMFrame *new_frame = nullptr;
 	int upper_range = 1.0 / probability;
 	std::uniform_int_distribution<> dis(1, upper_range);
 
@@ -46,24 +48,13 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 	if (dis(gen) == 1) {
 		std::cout << "** Skip one frame." << std::endl; // skip frame
 	} else {
-		filtered_frame = new IdentityFrame(frame); // assigns new_frame to a copy of curent_frame
+		new_frame = new IdentityFrame(frame); // assigns new_frame to a copy of curent_frame
+		enough = lib->c_sb_update_frame(lib, new_frame);
+		new_frame->FreeData();
+		delete new_frame;
 	}
 	
-	bool ongoing = false;
-	// Update the frame
-	if (filtered_frame) {
-		ongoing = not lib->c_sb_update_frame(lib, filtered_frame);
-	} else {
-		ongoing = true;
-	}
-
-	// Free the copy
-	if (filtered_frame) {
-		filtered_frame->FreeData();
-		delete filtered_frame;
-	}
-	
-	return ongoing;
+	return enough;
 }
 
 bool sb_process_once_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib) {
