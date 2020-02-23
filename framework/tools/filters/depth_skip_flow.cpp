@@ -23,6 +23,9 @@ std::vector<int> mask_old;
 float contrib; // assuming that all frames have the same resolution
 std::vector<sb_float3> normal_bins;
 
+int num_frame = 0;
+int skipped_frame = 0;
+
 // const int order = 0; // order of subdivisions of hemisphere
 int order = 0; // order of subdivisions of hemisphere
 float a = 1 / sqrt(5);
@@ -362,6 +365,7 @@ bool sb_update_frame_filter(SLAMBenchFilterLibraryHelper *,
 {
     bool enough = false;
     slambench::io::SLAMFrame *new_frame = nullptr;
+    num_frame = num_frame + 1;
 
     if (frame->FrameSensor != (slambench::io::Sensor *)depth_sensor)
     {
@@ -399,6 +403,7 @@ bool sb_update_frame_filter(SLAMBenchFilterLibraryHelper *,
     if (kl_divergence < threshold)
     {
         std::cout << "** Skip one frame." << std::endl; // skip frame
+        skipped_frame = skipped_frame + 1;
     }
     else
     {
@@ -410,6 +415,8 @@ bool sb_update_frame_filter(SLAMBenchFilterLibraryHelper *,
         delete new_frame;
     }
 
+    float skipped_rate = (float)skipped_frame / (float)num_frame;
+    std::cout << "skipped rate = " << skipped_rate << std::endl;
     return enough;
 }
 

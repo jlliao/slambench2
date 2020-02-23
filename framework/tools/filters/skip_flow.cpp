@@ -13,6 +13,8 @@
 double probability = 0;
 double default_probability = 0.1;
 static slambench::io::CameraSensor *grey_sensor;
+int num_frame = 0;
+int skipped_frame = 0;
 
 bool sb_new_filter_configuration (SLAMBenchFilterLibraryHelper * filter_settings) {
 	// initialise filter with probability parameter
@@ -37,6 +39,7 @@ bool sb_init_filter (SLAMBenchFilterLibraryHelper * filter_settings) {
 bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib, slambench::io::SLAMFrame * frame) {
 	// Randomize dropping
 	bool enough = false;
+	num_frame = num_frame + 1;
 
 	std::random_device rd;
 	std::mt19937_64 gen(rd());
@@ -47,6 +50,7 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 	// Randomly drop a frame
 	if (dis(gen) == 1) {
 		std::cout << "** Skip one frame." << std::endl; // skip frame
+		skipped_frame = skipped_frame + 1;
 	} else {
 		new_frame = new IdentityFrame(frame); // assigns new_frame to a copy of curent_frame
 		enough = lib->c_sb_update_frame(lib, new_frame);
@@ -54,6 +58,8 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 		delete new_frame;
 	}
 	
+	float skipped_rate = (float)skipped_frame / (float)num_frame;
+	std::cout << "skipped rate = " << skipped_rate << std::endl;
 	return enough;
 }
 

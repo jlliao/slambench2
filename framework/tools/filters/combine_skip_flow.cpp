@@ -39,6 +39,8 @@ float c = (1 + a) / 2;
 float d = (1 - a) / 2;
 float e = sqrt(d);
 float f = sqrt(c);
+int num_frame = 0;
+int skipped_frame = 0;
 
 std::deque<slambench::io::SLAMFrame*> buffered_rgb;
 std::deque<slambench::io::SLAMFrame*> buffered_int;
@@ -409,6 +411,7 @@ bool sb_init_filter (SLAMBenchFilterLibraryHelper * filter_settings) {
 bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHelper * lib, slambench::io::SLAMFrame * frame) {
 	bool enough = false;
 	std::vector<float> hist_new_intensity, hist_new_depth;
+	num_frame = num_frame + 1;
 
 	// buffering grey frames
 	if (frame->FrameSensor == (slambench::io::Sensor *)grey_sensor){
@@ -486,6 +489,7 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 		// compare histogram with threshold
 		if (combined_divergence < threshold) {
 			std::cout << "** Drop all buffered frames." << std::endl; // skip frame
+			skipped_frame = skipped_frame + buffered_int.size() + buffered_depth.size() + buffered_rgb.size();
 			buffered_int.clear();
 			buffered_depth.clear();
 			buffered_rgb.clear();
@@ -523,6 +527,8 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 		}
 	}
 
+	float skipped_rate = (float)skipped_frame / (float)num_frame;
+    std::cout << "skipped rate = " << skipped_rate << std::endl;
 	return enough;
 }
 

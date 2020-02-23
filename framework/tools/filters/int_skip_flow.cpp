@@ -8,6 +8,9 @@ double default_threshold = 0.0009;
 static slambench::io::CameraSensor *grey_sensor;
 std::vector<float> hist_old;
 float contrib; // assuming that all frames have the same resolution
+int num_frame = 0;
+int skipped_frame = 0;
+
 
 void calc_histogram(slambench::io::SLAMFrame *frame, std::vector<float> &hist,
                     float contrib)
@@ -67,6 +70,7 @@ bool sb_update_frame_filter(SLAMBenchFilterLibraryHelper *,
 {
     bool enough = false;
     slambench::io::SLAMFrame *new_frame = nullptr;
+    num_frame = num_frame + 1;
 
     if (frame->FrameSensor != (slambench::io::Sensor *)grey_sensor)
     {
@@ -93,6 +97,7 @@ bool sb_update_frame_filter(SLAMBenchFilterLibraryHelper *,
     if (kl_divergence < threshold)
     {
         std::cout << "** Skip one frame." << std::endl; // skip frame
+        skipped_frame = skipped_frame + 1;
     }
     else
     {
@@ -104,6 +109,8 @@ bool sb_update_frame_filter(SLAMBenchFilterLibraryHelper *,
         delete new_frame;
     }
 
+    float skipped_rate = (float)skipped_frame / (float)num_frame;
+    std::cout << "skipped rate = " << skipped_rate << std::endl;
     return enough;
 }
 
