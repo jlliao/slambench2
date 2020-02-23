@@ -24,7 +24,7 @@ ${DEPS_DIR}/gcc5 : ${REPOS_DIR}/${GCC_REPOS}
 	cd ${GCC_BUILD_DIR}/objdir && make install
 
 ${DEPS_DIR}/gcc7 : ${REPOS_DIR}/${GCC_REPOS}
-	cd $^ && git checkout gcc-7_2_0-release
+	cd $^ && git checkout releases/gcc-7.2.0
 	cd $^ && ./contrib/download_prerequisites
 	mkdir -p ${GCC_BUILD_DIR}/objdir
 	rm -rf ${GCC_BUILD_DIR}/objdir/*
