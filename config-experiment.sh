@@ -55,3 +55,9 @@
 ./build/bin/benchmark_loader -i datasets/ICL_NUIM/living_room_traj2_loop.slam -load ./build/lib/liborbslam2-original-library.so -filter ./build/lib/libdepth-skip-flow-filter.so -fth 0.00080 -o ./experiments/config-experiments/ICL2-ORB-DEP-00080.log
 ./build/bin/benchmark_loader -i datasets/ICL_NUIM/living_room_traj2_loop.slam -load ./build/lib/liborbslam2-original-library.so -filter ./build/lib/libdepth-skip-flow-filter.so -fth 0.00100 -o ./experiments/config-experiments/ICL2-ORB-DEP-00100.log
 ./build/bin/benchmark_loader -i datasets/ICL_NUIM/living_room_traj2_loop.slam -load ./build/lib/liborbslam2-original-library.so -filter ./build/lib/libdepth-skip-flow-filter.so -fth 0.00200 -o ./experiments/config-experiments/ICL2-ORB-DEP-00200.log
+
+./build/bin/benchmark_loader -i datasets/ICL_NUIM/living_room_traj2_loop.slam -load ./build/lib/liborbslam2-original-library.so -filter ./build/lib/libskip-flow-filter.so -fth 0.10 -o ./experiments/config-experiments/ICL2-ORB-RND-010.log
+./build/bin/benchmark_loader -i datasets/ICL_NUIM/living_room_traj2_loop.slam -load ./build/lib/liborbslam2-original-library.so -filter ./build/lib/libskip-flow-filter.so -fth 0.20 -o ./experiments/config-experiments/ICL2-ORB-RND-020.log
+./build/bin/benchmark_loader -i datasets/ICL_NUIM/living_room_traj2_loop.slam -load ./build/lib/liborbslam2-original-library.so -filter ./build/lib/libskip-flow-filter.so -fth 0.30 -o ./experiments/config-experiments/ICL2-ORB-RND-030.log
+./build/bin/benchmark_loader -i datasets/ICL_NUIM/living_room_traj2_loop.slam -load ./build/lib/liborbslam2-original-library.so -filter ./build/lib/libskip-flow-filter.so -fth 0.40 -o ./experiments/config-experiments/ICL2-ORB-RND-040.log
+./build/bin/benchmark_loader -i datasets/ICL_NUIM/living_room_traj2_loop.slam -load ./build/lib/liborbslam2-original-library.so -filter ./build/lib/libskip-flow-filter.so -fth 0.50 -o ./experiments/config-experiments/ICL2-ORB-RND-050.log
