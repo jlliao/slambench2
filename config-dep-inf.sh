@@ -1,0 +1,7 @@
+#!/bin/bash
+
+for i in 0.0005 0.001 0.0015 0.002 0.0025 0.003 0.0035 0.004 0.0045 0.005
+do
+    ./build/bin/benchmark_loader -i datasets/TUM/freiburg1/rgbd_dataset_freiburg1_xyz.slam -load ./build/lib/libinfinitam-cpp-library.so -filter ./build/lib/libdepth-skip-flow-filter.so -fth $i -o ./experiments/final/config/TUM1XYZ-INF-DEP-$i.log
+    ./build/bin/benchmark_loader -i datasets/TUM/freiburg2/rgbd_dataset_freiburg2_xyz.slam -load ./build/lib/libinfinitam-cpp-library.so -filter ./build/lib/libdepth-skip-flow-filter.so -fth $i -o ./experiments/final/config/TUM2XYZ-INF-DEP-$i.log
+done
