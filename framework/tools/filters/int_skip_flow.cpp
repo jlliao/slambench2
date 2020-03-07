@@ -1,3 +1,5 @@
+// intensity filter (grey image)
+
 #include <SLAMBenchAPI.h>
 #include <io/IdentityFrame.h>
 #include <io/sensor/CameraSensorFinder.h>

@@ -1,3 +1,6 @@
+// RGB filter
+// currently it does not work as intended
+
 #include <SLAMBenchAPI.h>
 #include <io/IdentityFrame.h>
 #include <io/sensor/CameraSensorFinder.h>
