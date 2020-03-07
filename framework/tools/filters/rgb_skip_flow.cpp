@@ -76,6 +76,7 @@ bool sb_init_filter(SLAMBenchFilterLibraryHelper *filter_settings)
 	assert(rgb_sensor); // make sure sensor is found
 	return true;
 }
+
 // TODO Update calc_histogram instances for each channel
 bool sb_update_frame_filter(SLAMBenchFilterLibraryHelper *,
 							SLAMBenchLibraryHelper *lib,
@@ -93,7 +94,7 @@ bool sb_update_frame_filter(SLAMBenchFilterLibraryHelper *,
 		return enough;
 	}
 
-	float contrib = 1 / (float)(frame->GetSize()); // set contribution according to first frame resolution
+	contrib = 1 / (float)(frame->GetSize()); // set contribution according to first frame resolution
 
 	// initialise histograms for each channel of first frame
 	if (hists_old.find('r') == hists_old.end())
