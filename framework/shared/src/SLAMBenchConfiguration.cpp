@@ -376,35 +376,15 @@ void SLAMBenchConfiguration::compute_loop_algorithm(SLAMBenchConfiguration* conf
 
 		for (auto lib : config->slam_libs) {
 
-			// ********* [[ FRAME PROCESSED BY FILTERS ]] *********
-
-			// std::vector<slambench::io::SLAMFrame*> filtered_frames;
-			// slambench::io::SLAMFrame * filtered_frame = current_frame;
-			// for (auto filter : lib->get_filter_libraries()) {
-			// 	filtered_frame  = filter->c_sb_process_filter(filter,filtered_frame);
-			// 	filtered_frames.push_back(filtered_frame);
-			// }
-
 			// ********* [[ SEND THE FRAME ]] *********
 			if (lib->get_filter_libraries().size() > 0) {
+				// ********* [[ FRAME PROCESSED BY FILTERS ]] *********
 				for (auto filter : lib->get_filter_libraries()) {
 					ongoing=not filter->c_sb_update_frame_filter(filter,lib,current_frame);
 				}
 			} else {
 				ongoing=not lib->c_sb_update_frame(lib,current_frame);
 			}
-			// if (filtered_frame) {
-			// 	ongoing=not lib->c_sb_update_frame(lib,filtered_frame);
-			// } else {
-			// 	ongoing=true;
-			// }
-
-			// for (auto temp_frame : filtered_frames) {
-			// 	if (temp_frame) {
-			// 		temp_frame->FreeData();
-			// 		delete temp_frame;
-			// 	}
-			// }
 
 			// This algorithm hasn't received enough frames yet.
 			if(ongoing) {
