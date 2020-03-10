@@ -24,6 +24,10 @@ struct ScalarComparer {
 // ********* [[ GLOBAL VARIABLES ]] *********
 double threshold = 0;
 double default_threshold = 0.0001;
+double intensity_weight = 0;
+double default_intensity_weight = 1;
+double depth_weight = 0;
+double default_depth_weight = 1;
 static slambench::io::DepthSensor *depth_sensor;
 static slambench::io::CameraSensor *grey_sensor;
 static slambench::io::CameraSensor *rgb_sensor;
@@ -389,6 +393,16 @@ bool sb_new_filter_configuration(SLAMBenchFilterLibraryHelper *filter_settings)
 														 "Numerical value to specify KL divergence threshold",
 														 &threshold,
 														 &default_threshold));
+	filter_settings->addParameter(TypedParameter<double>("itw",
+														 "intensity-weight",
+														 "Numerical value to specify intensity filter weight",
+														 &intensity_weight,
+														 &default_intensity_weight));
+	filter_settings->addParameter(TypedParameter<double>("dpw",
+														 "depth-weight",
+														 "Numerical value to specify depth filter weight",
+														 &depth_weight,
+														 &default_depth_weight));
 	return true;
 }
 
@@ -483,7 +497,7 @@ bool sb_update_frame_filter (SLAMBenchFilterLibraryHelper * , SLAMBenchLibraryHe
 		float depth_divergence = calc_kl_divergence(hist_new_depth, hist_old_depth);
 		std::cout << "depth_divergence = " << abs(depth_divergence) << std::endl;
 
-		float combined_divergence = abs(intensity_divergence) + abs(depth_divergence);
+		float combined_divergence = intensity_weight * abs(intensity_divergence) + depth_weight * abs(depth_divergence);
 		std::cout << "combined_divergence = " << combined_divergence << std::endl;
 
 		// compare histogram with threshold
