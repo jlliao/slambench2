@@ -1,0 +1,44 @@
+SLAMBench Report run started:	2020-03-17 02:29:22
+
+Properties:
+=================
+
+frame-limit: 0
+log-file: ./experiments/original/1-0-ICL3-ORB-0.005.log
+input: datasets/ICL_NUIM/living_room_traj3_loop.slam
+load-slam-library: ./build/lib/liborbslam2-original-library.so
+dse: false
+help: false
+realtime-mode: false
+realtime-multiplier: 1
+file-output: 
+RGB-intrinsics-parameters: 0.751875,1,0.4992185,0.4989583
+Depth-intrinsics-parameters: 0.751875,1,0.4992185,0.4989583
+Depth-disparity-params: 0.001,0
+Grey-intrinsics-parameters: 0.751875,1,0.4992185,0.4989583
+load-filter-library: ./build/lib/libcombine-skip-flow-filter.so
+mode: auto
+settings: 
+vocabulary: ./benchmarks/orbslam2/src/original/Vocabulary/ORBvoc.bin
+max-features: 1000
+scale-levels: 8
+scale-factor: 1.2
+initial-fast-threshold: 20
+second-fast-threshold: 7
+camera-fps: 40
+depth-threshold: 40
+skip-threshold: 0.005
+intensity-weight: 1
+depth-weight: 0
+
+Statistics:
+=================
+
+Frame Number	Timestamp	AbsoluteError	MeanATE	MaxATE	RPE_RMSE	Duration_Frame	CPU_Memory	GPU_Memory	CUDA_Memory	X	Y	Z
+1	6.3200000000	0.7418968678	0.7418968678	0.7418968678	0.0000000000	0.0230810000	0	0	209321984	0.0000000000	0.0000000000	0.0000000000
+2	31.1600000000	1.0408426523	0.8913697600	1.0408426523	2.4477880001	0.2225150000	0	0	209321984	0.0000000000	0.0000000000	0.0000000000
+3	31.5200000000	1.0122206211	0.9316533804	1.0408426523	1.7314719803	0.1038000000	0	0	209321984	0.0000000000	0.0000000000	0.0000000000
+4	31.6000000000	1.0072472095	0.9505518377	1.0408426523	1.4137728762	0.1466460000	0	0	209321984	-0.0037515794	0.0006959433	0.0050949953
+5	41.5600000000	1.0065786839	0.9617572069	1.0408426523	1.6168570518	0.2336610000	0	0	209321984	-0.0037515794	0.0006959433	0.0050949953
+6	45.4800000000	0.9434677362	0.9587089618	1.0408426523	1.5030104166	0.0557320000	0	0	209321984	0.0000000000	0.0000000000	0.0000000000
+7	49.4800000000	1.2503180504	1.0003674030	1.2503180504	1.3815966215	0.3043230000	0	0	209321984	-0.2155946195	0.2087287903	0.9133082628

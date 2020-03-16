@@ -1,0 +1,65 @@
+SLAMBench Report run started:	2020-03-15 04:40:16
+
+Properties:
+=================
+
+frame-limit: 0
+log-file: ./experiments/original/1-0-ICL3-INF-0.00175.log
+input: datasets/ICL_NUIM/living_room_traj3_loop.slam
+load-slam-library: ./build/lib/libinfinitam-cuda-library.so
+dse: false
+help: false
+realtime-mode: false
+realtime-multiplier: 1
+file-output: 
+RGB-intrinsics-parameters: 0.751875,1,0.4992185,0.4989583
+Depth-intrinsics-parameters: 0.751875,1,0.4992185,0.4989583
+Depth-disparity-params: 0.001,0
+Grey-intrinsics-parameters: 0.751875,1,0.4992185,0.4989583
+load-filter-library: ./build/lib/libcombine-skip-flow-filter.so
+trackerType: ICP
+depthTrackerICPThreshold: 0.01
+depthTrackerTerminationThreshold: 0.001
+voxelSize: 0.005
+viewFrustum_min: 0.2
+viewFrustum_max: 3
+mu: 0.02
+trackingRegime: B,B,R,R,R
+noICPRunTillLevel: 0
+maxW: 100
+useSwapping: false
+useBilateralFilter: false
+useApproximateRaycast: false
+modelSensorNoise: false
+skipPoints: true
+stopIntegratingAtMaxW: false
+skip-threshold: 0.00175
+intensity-weight: 1
+depth-weight: 0
+
+Statistics:
+=================
+
+Frame Number	Timestamp	AbsoluteError	MeanATE	MaxATE	RPE_RMSE	Duration_Frame	CPU_Memory	GPU_Memory	CUDA_Memory	X	Y	Z
+1	5.2000000000	0.5262737870	0.5262737870	0.5262737870	0.0000000000	0.0117590000	0	0	1182400512	-0.0000000000	0.0000000000	-0.0000000000
+2	6.0800000000	0.8751056194	0.7006897032	0.8751056194	0.3896266818	0.0028180000	0	0	1180303360	-0.1724279523	0.0215257648	0.0092169428
+3	6.7600000000	0.9411319494	0.7808371186	0.9411319494	0.3271379718	0.0022630000	0	0	1180303360	-0.1151021197	0.1560419947	0.0738710389
+4	11.1200000000	-nan	-nan	0.9411319494	-nan	0.0034920000	0	0	1180303360	-nan	-nan	-nan
+5	12.7600000000	-nan	-nan	0.9411319494	-nan	0.0011970000	0	0	1180303360	-nan	-nan	-nan
+6	14.4400000000	-nan	-nan	0.9411319494	-nan	0.0011790000	0	0	1180303360	-nan	-nan	-nan
+7	31.1600000000	-nan	-nan	0.9411319494	-nan	0.0069460000	0	0	1180303360	-nan	-nan	-nan
+8	31.3600000000	-nan	-nan	0.9411319494	-nan	0.0011890000	0	0	1180303360	-nan	-nan	-nan
+9	31.4800000000	-nan	-nan	0.9411319494	-nan	0.0011950000	0	0	1180303360	-nan	-nan	-nan
+10	31.5600000000	-nan	-nan	0.9411319494	-nan	0.0011920000	0	0	1180303360	-nan	-nan	-nan
+11	31.6400000000	-nan	-nan	0.9411319494	-nan	0.0011920000	0	0	1180303360	-nan	-nan	-nan
+12	31.7200000000	-nan	-nan	0.9411319494	-nan	0.0011650000	0	0	1180303360	-nan	-nan	-nan
+13	37.6000000000	-nan	-nan	0.9411319494	-nan	0.0066620000	0	0	1180303360	-nan	-nan	-nan
+14	41.0000000000	-nan	-nan	0.9411319494	-nan	0.0011810000	0	0	1180303360	-nan	-nan	-nan
+15	41.5600000000	-nan	-nan	0.9411319494	-nan	0.0011900000	0	0	1180303360	-nan	-nan	-nan
+16	41.9200000000	-nan	-nan	0.9411319494	-nan	0.0012370000	0	0	1180303360	-nan	-nan	-nan
+17	42.0400000000	-nan	-nan	0.9411319494	-nan	0.0011880000	0	0	1180303360	-nan	-nan	-nan
+18	42.4000000000	-nan	-nan	0.9411319494	-nan	0.0011640000	0	0	1180303360	-nan	-nan	-nan
+19	44.4400000000	-nan	-nan	0.9411319494	-nan	0.0011810000	0	0	1180303360	-nan	-nan	-nan
+20	46.1200000000	-nan	-nan	0.9411319494	-nan	0.0012090000	0	0	1180303360	-nan	-nan	-nan
+21	46.9200000000	-nan	-nan	0.9411319494	-nan	0.0011880000	0	0	1180303360	-nan	-nan	-nan
+22	48.5200000000	-nan	-nan	0.9411319494	-nan	0.0011870000	0	0	1180303360	-nan	-nan	-nan
